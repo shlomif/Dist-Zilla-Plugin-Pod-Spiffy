@@ -31,23 +31,30 @@ sub __munge_args {
     $in =~ s/\s+/ /g;
     my @ins = split /\s*\|\s*/, $in;
 
-    my $theme = 'http://zoffix.com/CPAN/Dist-Zilla-Plugin-Pod-Spiffy/icons';
-    my $mungings = __mungings($theme);
+    my $theme = 'http://zoffix.com/CPAN/Dist-Zilla-Plugin-Pod-    Spiffy/icons';
+    # my $theme = 'http://zcms';
+    my $method_icons = __method_icons($theme);
+    my $section_bits = __section_bits($theme);
     my $out;
     for ( @ins ) {
         s/^\s+|\s+$//g;
-        if ( s/^github\s+// ) {
-            $out .= ' ' . __process_git($theme, $_);
-            next;
-        }
-        elsif ( s/^authors?\s+// ){
+        if ( s/^authors?\s+// ){
             $out .= ' ' . __process_authors($theme, $_);
             next;
         }
 
         tr/ /_/;
-        next unless $mungings->{$_};
-        $out .= ' ' . $mungings->{$_};
+        if ( s/^((?:start|end)_[^_]+)_section// ) {
+            $out .= $section_bits->{$1} ? ' ' . $section_bits->{$1} : '';
+            next;
+        }
+        elsif ( /^hr$/ ) {
+            $out .= qq{<div style="background: url($theme/hr.png);}
+                . q{height: 18px;"></div>};
+        }
+
+        next unless $method_icons->{$_};
+        $out .= ' ' . $method_icons->{$_};
     }
 
     return '' unless $out;
@@ -62,22 +69,57 @@ sub __process_authors {
     my $auth = Acme::CPANAuthors->new;
     for ( map uc, @authors ) {
         my $url = $auth->avatar_url($_) || '';
-        $out .= ' ' . qq{<a href="http://metacpan.org/author/$_">}
-                . qq{<img src="$url" alt="$_" style="margin-bottom:5px;margin-right:3px !important">$_</a>};
+        $out .= qq{
+            <span style="display: inline-block; text-align: center;">
+                <a href="http://metacpan.org/author/$_">
+                    <img src="$url" alt="$_"
+                        style="display: block;
+                            margin: 0 3px 5px 0!important;
+                            border: 1px solid #666;
+                            border-radius: 3px;
+                        ">
+                    <span style="color: #333; font-weight: bold;">$_</span>
+                </a>
+            </span>
+        };
     }
 
-    return $out . '<br style="clear: both;">';
+    $out =~ s/\s*\n\s*/ /g;
+    return $out;
 }
 
-sub __process_git {
-    my ( $theme, $repo ) = @_;
+sub __section_bits {
+    my $theme = shift;
 
-    return qq{<p style="background: url($theme/github.png) no-repeat left;}
-        . qq{ padding-left: 120px; min-height: 61px; }
-        . qq{padding-top: 30px;">$repo</p>};
+    my @section_pics = qw/
+        section-author.png
+        section-bugs.png
+        section-code.png
+        section-contributors.png
+        section-experimental.png
+        section-github.png
+        section-warning.png
+    /;
+
+    my %bits;
+    for my $pic ( @section_pics ) {
+        ( my $name = $pic ) =~ s/section-|\.png//g;
+        $name =~ tr/-/_/;
+        $bits{"start_$name"} = qq{
+            <div style="display: table; height: 91px;
+                background: url($theme/$pic) no-repeat left;
+                padding-left: 120px;"
+            >
+                <div style="display: table-cell; vertical-align: middle;">
+        };
+        $bits{"end_$name"} = '</div></div>';
+    }
+
+    s/\s*\n\s*/ /g for values %bits;
+    return \%bits;
 }
 
-sub __mungings {
+sub __method_icons {
     my $theme = shift;
     return {
         in_arrayref => qq{<img alt="" src="$theme/in-arrayref.png">},
@@ -104,7 +146,7 @@ sub __mungings {
         out_hashref => qq{<img alt="" src="$theme/out-hashref.png">},
         out_key_value => qq{<img alt="" src="$theme/out-key-value.png">},
         out_list_or_arrayref
-            => qq{<img alt="" src="$theme/out-list-or-arrayref.png.png">},
+            => qq{<img alt="" src="$theme/out-list-or-arrayref.png">},
         out_list => qq{<img alt="" src="$theme/out-list.png">},
         out_object => qq{<img alt="" src="$theme/out-object.png">},
         out_scalar => qq{<img alt="" src="$theme/out-scalar.png">},
@@ -466,42 +508,173 @@ Use this icon to indicate your sub/method returns a subref.
 
 Use this icon to indicate your sub/method returns a object.
 
-=head2 OTHER FEATURES
+=head2 SECTION ICONS
+
+To use a section icon, you need to indicate both the start of the section
+and the end of it, e.g.:
+
+    =for pod_spiffy start github section
+
+    =head3 GITHUB REPO
+
+    Fork this module on github https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy
+
+    =for pod_spiffy end github section
+
+Available icons are:
 
 =head3 Github Repo
 
-B<EXPERIMENTAL!> This feature is still experimental and the API
-will likely change. Currently, it adds a github octocat icon to the
-left of the github repo text; currently suggested usage is as follows,
-although, this is very likely to change in the future. Use
-C<github> code to display this; followed by the HTML code you want to
-be displayed to the right of the octocat icon.
+    =for pod_spiffy start github section
 
-    =for pod_spiffy github Fork this module on GitHub:
-    <a href="https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy">https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy</a>
-
-    =for :text Fork this module on GitHub:
+    Fork this module on GitHub:
     L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy>
+
+    =for pod_spiffy end github section
+
+=for pod_spiffy start github section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end github section
+
+=head3 Authors
+
+    =for pod_spiffy start author section
+
+    Joe Shmoe wrote this module
+
+    =for pod_spiffy end author section
+
+=for pod_spiffy start author section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end author section
+
+B<See also:> L<CPAN Authors> section below, for a way to include
+author avatars.
+
+=head3 Contributors
+
+    =for pod_spiffy start contributors section
+
+        Joe More also contributed to this module
+
+    =for pod_spiffy end contributors section
+
+=for pod_spiffy start contributors section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end contributors section
+
+B<See also:> L<CPAN Authors> section below, for a way to include
+author avatars.
+
+=head3 Bugs
+
+    =for pod_spiffy start bugs section
+
+    Report bugs for this module on
+    L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy/issues>
+
+    =for pod_spiffy end bugs section
+
+=for pod_spiffy start bugs section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end bugs section
+
+=head3 Code
+
+    =for pod_spiffy start code section
+
+        print "Yey\n" for 1..42;
+
+    =for pod_spiffy end code section
+
+=for pod_spiffy start code section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end code section
+
+I'm unsure of the use for this icon. Originally it was planned to be
+used with the SYNOPSIS code. The icon will likely be changed in appearance
+and the C<code> section might become more versatile, to be used
+with all chunks of code.
+
+=head3 Warning
+
+    =for pod_spiffy start warning section
+
+    Warning! If you try this something might explode!
+
+    =for pod_spiffy end warning section
+
+=for pod_spiffy start warning section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end warning section
+
+Use this section icon to indicate a warning.
+
+=head3 Experimental
+
+    =for pod_spiffy start experimental section
+
+    This method is still experimental!
+
+    =for pod_spiffy end experimental section
+
+=for pod_spiffy start experimental section
+
+=for html <p>This is an example</p>
+
+=for pod_spiffy end experimental section
+
+Use this section to hint about the features described being experimental.
+
+=head2 OTHER FEATURES
 
 =head3 CPAN Authors
 
-B<EXPERIMENTAL!> This feature is still experimental and the appearance
-of the output will likely change.
-Currently, this feature adds an avatar of the author, and their PAUSE
+    =for pod_spiffy author ZOFFIX ETHER MSTROUT
+
+Adds an avatar of the author, and their PAUSE
 ID. To use this feature use C<authors> code, followed by a
 whitespace separated list of PAUSE author IDs, for example:
 
-    =for pod_spiffy author ZOFFIX ETHER
+=for html <p>Example:</p>
+
+=for pod_spiffy author ZOFFIX ETHER MSTROUT
+
+=head3 Horizontal Rule
+
+    =for pod_spiffy hr
+
+=for html <p>Example:</p>
+
+=for pod_spiffy hr
+
+A simple horizontal rule. You can use it, for example, to separate
+groups of methods.
 
 =head1 REPOSITORY
 
-=for pod_spiffy github Fork this module on GitHub:
-<a href="https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy">https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy</a>
+=for pod_spiffy start github section
 
-=for :text Fork this module on GitHub:
+Fork this module on GitHub:
 L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy>
 
+=for pod_spiffy end github section
+
 =head1 BUGS
+
+=for pod_spiffy start bugs section
 
 To report bugs or request features, please use
 L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy/issues>
@@ -509,13 +682,17 @@ L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy/issues>
 If you can't access GitHub, you can email your request
 to C<bug-Dist-Zilla-Plugin-Pod-Spiffy at rt.cpan.org>
 
+=for pod_spiffy end bugs section
+
 =head1 AUTHOR
 
-(Ether is an unvolunteer test subject for this experiment :) )
+=for pod_spiffy start author section
 
-=for pod_spiffy author ZOFFIX ETHER
+=for pod_spiffy author ZOFFIX
 
 =for text Zoffix Znet <zoffix at cpan.org>
+
+=for pod_spiffy end author section
 
 =head1 LICENSE
 
