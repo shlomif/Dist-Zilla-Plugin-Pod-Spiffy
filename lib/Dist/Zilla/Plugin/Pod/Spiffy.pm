@@ -471,13 +471,25 @@ Use this icon to indicate your sub/method returns a object.
 B<EXPERIMENTAL!> This feature is still experimental and the API
 will likely change. Currently, it adds a github octocat icon to the
 left of the github repo text; currently suggested usage is as follows,
-although, this is very likely to change in the future:
+although, this is very likely to change in the future. Use
+C<github> code to display this; followed by the HTML code you want to
+be displayed to the right of the octocat icon.
 
     =for pod_spiffy github Fork this module on GitHub:
     <a href="https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy">https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy</a>
 
     =for :text Fork this module on GitHub:
     L<https://github.com/zoffixznet/Dist-Zilla-Plugin-Pod-Spiffy>
+
+=head3 CPAN Authors
+
+B<EXPERIMENTAL!> This feature is still experimental and the appearance
+of the output will likely change.
+Currently, this feature adds an avatar of the author, and their PAUSE
+ID. To use this feature use C<authors> code, followed by a
+whitespace separated list of PAUSE author IDs, for example:
+
+    =for pod_spiffy author ZOFFIX ETHER
 
 =head1 REPOSITORY
 
