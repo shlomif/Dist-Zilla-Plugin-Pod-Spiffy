@@ -31,7 +31,7 @@ sub __munge_args {
     $in =~ s/\s+/ /g;
     my @ins = split /\s*\|\s*/, $in;
 
-    my $theme = 'http://zoffix.com/CPAN/Dist-Zilla-Plugin-Pod-    Spiffy/icons';
+    my $theme = 'http://zoffix.com/CPAN/Dist-Zilla-Plugin-Pod-Spiffy/icons';
     # my $theme = 'http://zcms';
     my $method_icons = __method_icons($theme);
     my $section_bits = __section_bits($theme);
