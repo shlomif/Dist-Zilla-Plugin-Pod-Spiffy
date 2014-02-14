@@ -85,6 +85,7 @@ sub __process_authors {
     }
 
     $out =~ s/\s*\n\s*/ /g;
+    $out =~ s/\s+$//g;
     return $out;
 }
 
@@ -105,13 +106,10 @@ sub __section_bits {
     for my $pic ( @section_pics ) {
         ( my $name = $pic ) =~ s/section-|\.png//g;
         $name =~ tr/-/_/;
-        $bits{"start_$name"} = qq{
-            <div style="display: table; height: 91px;
+        $bits{"start_$name"} = qq{<div style="display: table; height: 91px;
                 background: url($theme/$pic) no-repeat left;
                 padding-left: 120px;"
-            >
-                <div style="display: table-cell; vertical-align: middle;">
-        };
+            ><div style="display: table-cell; vertical-align: middle;">};
         $bits{"end_$name"} = '</div></div>';
     }
 
